@@ -5,77 +5,27 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <tuple>
 using namespace std;
 #include "Activity.h"
 #include "Activity.cpp"
+#include "Cycling.h"
+#include "Running.h"
+#include "Walking.h"
 #include "Activity_Tracker.h"
 #include "Activity_Tracker.cpp"
+#include "Input_Helper.h"
+#include "Input_Helper.cpp"
 
 //***********************************************************************************
 // Name:       Makenzie Hall
 // Program:    Fitness Tracker
-// Last Updated:  09/15/2025
+// Last Updated:  09/16/2025
 // This program is a fitness tracker system where you can pick an activity, or make
 // your own, and track the dates done, duration of activity, and calories burned.
+// Data for calories burned per hour on average for activity:
+// https://www.dhs.wisconsin.gov/publications/p4/p40109.pdf
 //***********************************************************************************
-
-//***********************************************************************************
-// DATE CHECKING
-//***********************************************************************************
-// Checks if the year is a leap year
-bool isLeapYear(int year) {
-    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-}
-
-// Checks if the date is valid by using a array for how many days in the month
-// also takes into account leap years
-bool isValidDate(int month, int day, int year) {
-    if (year < 1900 || month < 1 || month > 12 || day < 1) return false;
-
-    int daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
-
-    if (month == 2 && isLeapYear(year)) {
-        return day <= 29;
-    }
-
-    return day <= daysInMonth[month - 1];
-}
-
-// collects and returns a date and checks if the date is valid, if not prompt another input
-string validDate() {
-    bool valid = false;
-    int month, day, year;
-    char slash1, slash2;
-    string input;
-
-    // runs while valid is still false
-    while (!valid) {
-        cout << "Enter a date (mm/dd/yyyy): ";
-        getline(cin, input);
-        stringstream ss(input);
-        ss >> month >> slash1 >> day >> slash2 >> year;
-
-        if (ss.fail() || slash1 != '/' || slash2 != '/' || !ss.eof()) {
-            cout << "Error: Incorrect date format. Please use mm/dd/yyyy." << endl;
-            continue;
-        }
-
-        if (!isValidDate(month, day, year)) {
-            cout << "Error: Invalid date. Please enter a valid calendar date." << endl;
-            continue;
-        }
-
-        valid = true;
-    }
-
-    // Format date with zero-padding
-    stringstream formattedDate;
-    formattedDate << setfill('0') << setw(2) << month << '/'
-                  << setw(2) << day << '/'
-                  << year;
-
-    return formattedDate.str();
-}
 
 //***********************************************************************************
 // VECTOR SORT
@@ -182,7 +132,7 @@ int main (int argc, char *argv[]){
 //***********************************************************************************
 if (argc != 3)
 {
-    cout << "Usage: " << argv[0] << " tracker input, tracker output" << endl;
+    cout << "Usage: " << argv[0] << " <tracker_input> <tracker_output>" << endl;
     exit(0);
 }
 
@@ -214,130 +164,118 @@ Activity_Tracker actTracker = Activity_Tracker(acts);
    while (input != "8")
    {
         printOptions();
-        input.clear();
         cin >> input;
+        cin.ignore();
 //**************************************************************************
 // If input is 1 set up for add activity
 //**************************************************************************
         if(input == "1")
         {
-            string date, name, minStr, calStr;
-            int mins;
-            double cal;
+            // Choose an activity or make your own
+            cout << "\n============= ACTIVITY MENU =============\n";
+            cout << "A. Cycling\n";
+            cout << "B. Running\n";
+            cout << "C. Walking\n";
+            cout << "D. Other\n";
+            cout << "Enter your choice (A-D): ";
+            cout << "\n=========================================\n"
+             <<"\nReady for Input:"<<endl;
 
-            // get input
-            cout << "\n Enter Activity Data:" << endl;
-            cout << "Name: " << endl;
-            cin.ignore(256, '\n');
-            getline(cin, name);
-            date = validDate();
-            cout << "Duration (Mins): " << endl;
-            getline(cin, minStr);
-            mins = stoi(minStr);
-            cout << "Calories Burned Per Hour: " << endl;
-            getline(cin, calStr);
-            cal = stod(calStr);
+             cin >> input;
+             cin.ignore();
 
-            // create activity and add to tracker
-            Activity newAct = Activity(name, date, mins, cal);
-            actTracker.addAct(newAct);
+             if (input == "A" || input == "a")
+             {
+                // get input
+                auto [date, mins] = getActivityData();
 
-            cout << "\n Adding Activity...... \n" << endl;
+                // create activity and add to tracker
+                Cycling newCycle = Cycling(date, mins);
+                actTracker.addAct(newCycle);
+
+                cout << "\nAdding Activity...... \n" << endl;
+             }
+             else if (input == "B" || input == "b")
+             {
+                // get input
+                auto [date, mins] = getActivityData();
+
+                // create activity and add to tracker
+                Running newRun = Running(date, mins);
+                actTracker.addAct(newRun);
+
+                cout << "\nAdding Activity...... \n" << endl;
+             }
+             else if (input == "C" || input == "c")
+             {
+
+                // get input
+                auto [date, mins] = getActivityData();
+
+                // create activity and add to tracker
+                Walking newWalk = Walking(date, mins);
+                actTracker.addAct(newWalk);
+
+                cout << "\nAdding Activity...... \n" << endl;
+             }
+             else if (input == "D" || input == "d")
+             {
+                auto [name, date, mins, cal] = getFullActivityData("\nEnter Activity Data:");
+                Activity newAct = Activity(name, date, mins, cal);
+                actTracker.addAct(newAct);
+                cout << "\nAdding Activity...... \n" << endl;
+             }
+             else
+             {
+                 cout << "Invalid selection.\n";
+             }
+
         }
 
 //**************************************************************************
 // If input is 2 set up for remove activity
 //**************************************************************************
-        if (input == "2")
+        else if (input == "2")
         {
-            string date, name, minStr, calStr;
-            int mins;
-            double cal;
-
-            // get input
-            cout << "\n Enter Activity Data for Which to Remove:" << endl;
-            cout << "Name: " << endl;
-            cin.ignore(256, '\n');
-            getline(cin, name);
-            date = validDate();
-            cout << "Duration (Mins): " << endl;
-            getline(cin, minStr);
-            mins = stoi(minStr);
-            cout << "Calories Burned Per Hour: " << endl;
-            getline(cin, calStr);
-            cal = stod(calStr);
-
-            // create activity and remove from tracker
+            auto [name, date, mins, cal] = getFullActivityData("\nEnter Activity Data for Which to Remove:");
             Activity oldAct = Activity(name, date, mins, cal);
-            if(actTracker.found(oldAct))
-            {
-                cout << "\n Removing Activity...... \n" << endl;
-            }
-            actTracker.removeAct(oldAct);
+            if(actTracker.found(oldAct)) {
+                cout << "\nRemoving Activity...... \n" << endl;
+                actTracker.removeAct(oldAct);
+            } else {
+                cout << "Activity not found. Nothing removed.\n";
+}
 
         }
 
 //**************************************************************************
 // If input is 3 set up for update activity (removes old, adds new)
 //**************************************************************************
-        if (input == "3")
+        else if (input == "3")
         {
 
-            string date, name, minStr, calStr;
-            int mins;
-            double cal;
+            auto [oldName, oldDate, oldMins, oldCal] = getFullActivityData("\nEnter Activity Data for Which to Update:");
+            Activity oldAct = Activity(oldName, oldDate, oldMins, oldCal);
 
-            bool found = false;
+            if (!actTracker.found(oldAct)) {
+                cout << "\nActivity not found. Update aborted.\n" << endl;
+                continue;
+            }
 
-            // get input to find activity to update
-                cout << " \n Enter Activity Data for Which to Update:" << endl;
-                cout << "Name: " << endl;
-                cin.ignore(256, '\n');
-                getline(cin, name);
-                date = validDate();
-                cout << "Duration (Mins): " << endl;
-                getline(cin, minStr);
-                mins = stoi(minStr);
-                cout << "Calories Burned Per Hour: " << endl;
-                getline(cin, calStr);
-                cal = stod(calStr);
-
-
-
-
-            // create activity and remove from tracker, if not found continue
-            Activity oldAct = Activity(name, date, mins, cal);
-            found = actTracker.found(oldAct);
-                if (!found){
-                    cout<< "\n Activity not found. Update aborted. \n" << endl;
-                    continue;
-                }
             actTracker.removeAct(oldAct);
 
-             // get input to update activity
-            cout << "Enter Updated Activity Data:" << endl;
-            cout << "Name: " << endl;
-            getline(cin, name);
-            date = validDate();
-            cout << "Duration (Mins): " << endl;
-            getline(cin, minStr);
-            mins = stoi(minStr);
-            cout << "Calories Burned Per Hour: " << endl;
-            getline(cin, calStr);
-            cal = stod(calStr);
-
-            // create activity and add to tracker
-            Activity newAct = Activity(name, date, mins, cal);
+            auto [newName, newDate, newMins, newCal] = getFullActivityData("Enter Updated Activity Data:");
+            Activity newAct = Activity(newName, newDate, newMins, newCal);
             actTracker.addAct(newAct);
 
-            cout << "\n Updating Activity...... \n" << endl;
+            cout << "\nUpdating Activity...... \n" << endl;
 
         }
 
 //**************************************************************************
 // If input is 4 set up for view all activities
 //**************************************************************************
-        if( input== "4" )
+        else if( input== "4" )
         {
             // Print column headers
             cout << '\n';
@@ -367,32 +305,36 @@ Activity_Tracker actTracker = Activity_Tracker(acts);
 //**************************************************************************
 // If input is 5 set up for view total calories burned
 //**************************************************************************
-        if (input == "5")
+        else if (input == "5")
         {
-            cout << "\n Total Calories Burned: " << actTracker.totalCalAll()<< '\n';
+            cout << "\nTotal Calories Burned: " << actTracker.totalCalAll()<< '\n';
         }
 
 //**************************************************************************
 // If input is 6 set up for view total time active
 //**************************************************************************
-        if (input == "6")
+        else if (input == "6")
         {
-            cout<< "\n Total time Active: " << actTracker.totalTime()<< " hours \n";
+            cout<< "\nTotal time Active: " << actTracker.totalTime()<< " hours \n";
         }
 //**************************************************************************
 // If input is 7 set up for sort fitness tracker
 //**************************************************************************
-        if (input == "7")
+        else if (input == "7")
         {
             sortVec(actTracker.getActivitiesNonConst());
-            cout << "\n Sorting Fitness Tracker...... \n";
+            cout << "\nSorting Fitness Tracker...... \n";
+        }
+        else {
+            cout << "Invalid menu selection. Please choose 1-8.\n";
         }
    }
 
-sortVec(actTracker.getActivitiesNonConst());
-cout << "\n Sorting Fitness Tracker...... \n";
-trackerToFile(trackOut, actTracker);
+    sortVec(actTracker.getActivitiesNonConst());
+    cout << "\nSorting Fitness Tracker...... \n";
+    trackerToFile(trackOut, actTracker);
+
+    cout << "Fitness tracker saved to file. Goodbye!\n";
 
     return 0;
-
-};
+}
