@@ -37,23 +37,27 @@ void Activity::displayDetails(){
 
 // Takes the formatted line and creates activity out of it
 void Activity::fromFormattedLine(const string& line) {
-    // Extract substrings by fixed width
-    string dateStr = line.substr(0, 12);
-    string nameStr = line.substr(12, 15);
-    string durHStr = line.substr(27, 10);
-    string calPerHStr = line.substr(37, 15);
+    if (line.length() < 70) return;  // basic safety check
 
-    // Trim spaces
-    auto trim = [](string s) {
+    // Extract fixed-width fields based on your file format
+    string dateStr       = line.substr(0, 12);
+    string nameStr       = line.substr(12, 15);
+    string hoursStr      = line.substr(27, 10);
+    string calPerHrStr   = line.substr(37, 15);
+    // total calories is line.substr(52, 18) — not needed here
+
+    // Trim helper
+    auto trim = [](const string& s) -> string {
         size_t start = s.find_first_not_of(" \t");
-        size_t end   = s.find_last_not_of(" \t");
+        size_t end = s.find_last_not_of(" \t");
         return (start == string::npos) ? "" : s.substr(start, end - start + 1);
     };
 
+    // Parse and assign values
     date     = trim(dateStr);
     name     = trim(nameStr);
-    durMin   = (stod(trim(durHStr)) * 60);
-    durH     = stod(trim(durHStr));
-    calPerH  = stod(trim(calPerHStr));
+    durH     = stod(trim(hoursStr));
+    calPerH  = stod(trim(calPerHrStr));
+    durMin   = static_cast<int>(durH * 60);
 }
 
