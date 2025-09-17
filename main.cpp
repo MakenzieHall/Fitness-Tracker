@@ -151,34 +151,6 @@ Activity_Tracker actTracker = Activity_Tracker(acts);
 
 trackIn.close();
 
-
-// Print column headers
-            cout << '\n';
-            cout << left  << setw(12) << "Date"
-                << left  << setw(15) << "Name"
-                << right << setw(10) << "Hours"
-                << right << setw(15) << "Cal/Hr"
-                << right << setw(18) << "Total Calories"
-                << '\n';
-
-            cout << string(70, '-') << '\n'; // divider line
-
-            double totalCalories = 0.0;
-
-            for (const Activity& act : actTracker.getActivities()) {
-                act.toFile(cout);
-                totalCalories += act.calBurned();
-            }
-
-            cout << string(70, '-') << '\n'; // divider line
-
-            // Print total calories burned
-            cout << right << setw(52) << "Total Calories Burned:"
-                << setw(18) << fixed << setprecision(2) << totalCalories
-                << '\n';
-
-
-
 //**************************************************************************
 // While loop to allow commands until the user inputs 8
 //**************************************************************************
